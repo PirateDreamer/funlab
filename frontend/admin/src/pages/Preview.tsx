@@ -24,6 +24,7 @@ type WidgetSchema = {
 type PageDsl = {
   page: {
     device: 'mobile' | 'pc'; width: number; height: number; background: string
+    backgroundTransparent: boolean
     backgroundImage: string; backgroundSize: string; backgroundPosition: string; backgroundRepeat: string
   }
   widgets: WidgetSchema[]
@@ -104,7 +105,7 @@ export default function Preview() {
   return (
     <div className="preview-page">
       <div className="preview-canvas" style={{
-        width: size.width, height: size.height, background: dsl.page.background,
+        width: size.width, height: size.height, background: dsl.page.backgroundTransparent ? 'transparent' : dsl.page.background,
         backgroundImage: dsl.page.backgroundImage ? `url(${dsl.page.backgroundImage})` : undefined,
         backgroundSize: dsl.page.backgroundSize, backgroundPosition: dsl.page.backgroundPosition, backgroundRepeat: dsl.page.backgroundRepeat,
       }}>

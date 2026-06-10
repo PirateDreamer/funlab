@@ -587,6 +587,71 @@ button.danger {
   font-size: 13px;
 }
 
+.resize-handle {
+  position: absolute;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.resize-handle::after {
+  content: '';
+  display: block;
+  width: 8px;
+  height: 8px;
+  border: 2px solid #1677ff;
+  border-radius: 2px;
+  background: #ffffff;
+}
+
+.resize-handle.top-left { top: -4px; left: -4px; cursor: nwse-resize; }
+.resize-handle.top-right { top: -4px; right: -4px; cursor: nesw-resize; }
+.resize-handle.bottom-left { bottom: -4px; left: -4px; cursor: nesw-resize; }
+.resize-handle.bottom-right { bottom: -4px; right: -4px; cursor: nwse-resize; }
+.resize-handle.top { top: -4px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+.resize-handle.bottom { bottom: -4px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+.resize-handle.left { left: -4px; top: 50%; transform: translateY(-50%); cursor: ew-resize; }
+.resize-handle.right { right: -4px; top: 50%; transform: translateY(-50%); cursor: ew-resize; }
+
+.page-canvas.page-selected {
+  outline: 2px dashed #1677ff;
+  outline-offset: 4px;
+}
+
+.guide-line {
+  position: absolute;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+.guide-v {
+  top: 0;
+  width: 1px;
+  height: 100%;
+  background: #ff4d4f;
+}
+
+.guide-h {
+  left: 0;
+  height: 1px;
+  width: 100%;
+  background: #ff4d4f;
+}
+
+.layout-tooltip {
+  position: absolute;
+  z-index: 10001;
+  white-space: nowrap;
+  background: #111827;
+  color: #e5e7eb;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: 4px;
+  pointer-events: none;
+  letter-spacing: 0.3px;
+}
+
 .drop-target {
   outline: 2px dashed #1677ff !important;
   outline-offset: -2px;

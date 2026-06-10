@@ -81,6 +81,7 @@ type PageDsl = {
     width: number
     height: number
     background: string
+    backgroundTransparent: boolean
     backgroundImage: string
     backgroundSize: string
     backgroundPosition: string
@@ -541,6 +542,7 @@ function Builder() {
   const [rightTab, setRightTab] = useState<RightTab>('props')
   const [pageName, setPageName] = useState('码良风格活动页')
   const [pageBackground, setPageBackground] = useState('#f2f4f8')
+  const [pageBgTransparent, setPageBgTransparent] = useState(false)
   const [pageBackgroundImage, setPageBackgroundImage] = useState('')
   const [pageBackgroundSize, setPageBackgroundSize] = useState('cover')
   const [pageBackgroundPosition, setPageBackgroundPosition] = useState('center')
@@ -573,6 +575,7 @@ function Builder() {
         width: size.width,
         height: size.height,
         background: pageBackground,
+        backgroundTransparent: pageBgTransparent,
         backgroundImage: pageBackgroundImage,
         backgroundSize: pageBackgroundSize,
         backgroundPosition: pageBackgroundPosition,
@@ -580,7 +583,7 @@ function Builder() {
       },
       widgets,
     }),
-    [device, pageBackground, pageBackgroundImage, pageBackgroundSize, pageBackgroundPosition, pageBackgroundRepeat, pageName, size.height, size.width, widgets],
+    [device, pageBackground, pageBgTransparent, pageBackgroundImage, pageBackgroundSize, pageBackgroundPosition, pageBackgroundRepeat, pageName, size.height, size.width, widgets],
   )
 
   useEffect(() => {
@@ -713,6 +716,7 @@ function Builder() {
       setDevice(nextDevice)
       setPageName(next.page?.name || '未命名页面')
       setPageBackground(next.page?.background || '#f2f4f8')
+      setPageBgTransparent(!!next.page?.backgroundTransparent)
       setPageBackgroundImage(next.page?.backgroundImage || '')
       setPageBackgroundSize(next.page?.backgroundSize || 'cover')
       setPageBackgroundPosition(next.page?.backgroundPosition || 'center')
@@ -809,6 +813,15 @@ function Builder() {
               <>
                 <PanelTitle title="页面图层" subtitle="选择、调整层级" />
                 <div className="layer-list">
+                  <button
+                    className={`layer-row ${selectedId === '__page__' ? 'active' : ''}`}
+                    type="button"
+                    onClick={() => setSelectedId('__page__')}
+                  >
+                    <span>page</span>
+                    <strong>{pageName}</strong>
+                    <small>根</small>
+                  </button>
                   {[...widgets]
                     .sort((a, b) => b.layout.zIndex - a.layout.zIndex)
                     .map((widget) => (
@@ -890,16 +903,16 @@ function Builder() {
                 </label>
               </div>
               <div>
-                <button type="button" onClick={duplicateSelected} disabled={!selected}>
+                <button type="button" onClick={duplicateSelected} disabled={!selected || selectedId === '__page__'}>
                   复制
                 </button>
-                <button type="button" onClick={() => selected && moveLayer(selected.id, 'up')} disabled={!selected}>
+                <button type="button" onClick={() => selected && moveLayer(selected.id, 'up')} disabled={!selected || selectedId === '__page__'}>
                   上移层级
                 </button>
-                <button type="button" onClick={() => selected && moveLayer(selected.id, 'down')} disabled={!selected}>
+                <button type="button" onClick={() => selected && moveLayer(selected.id, 'down')} disabled={!selected || selectedId === '__page__'}>
                   下移层级
                 </button>
-                <button type="button" className="danger" onClick={removeSelected} disabled={!selected}>
+                <button type="button" className="danger" onClick={removeSelected} disabled={!selected || selectedId === '__page__'}>
                   删除
                 </button>
               </div>
@@ -909,12 +922,14 @@ function Builder() {
               dsl={dsl}
               mode="edit"
               selectedId={selected?.id}
+              isPageSelected={selectedId === '__page__'}
               dropTargetId={dropTargetId}
               onAddWidget={addWidget}
               onDuplicate={duplicateSelected}
               onMoveLayer={(dir) => selected && moveLayer(selected.id, dir)}
               onRemove={removeSelected}
               onSelect={setSelectedId}
+              onSelectPage={() => setSelectedId('__page__')}
               onSetDropTarget={setDropTargetId}
               onUpdateLayout={(id, layout) => {
                 setWidgets((current) =>
@@ -946,7 +961,71 @@ function Builder() {
               </button>
             </div>
 
-            {rightTab !== 'source' && selected ? (
+            {rightTab !== 'source' && selectedId === '__page__' ? (
+              rightTab === 'props' && (
+                <div className="inspector-content">
+                  <ConfigSection title="页面配置">
+                    <label>
+                      页面名称
+                      <input value={pageName} onChange={(event) => setPageName(event.target.value)} />
+                    </label>
+                    <div className="field-grid">
+                      <label>
+                        设备
+                        <select value={device} onChange={(event) => setDevice(event.target.value as DeviceType)}>
+                          <option value="mobile">移动端</option>
+                          <option value="pc">PC</option>
+                        </select>
+                      </label>
+                      <label>
+                        背景色
+                        <input type="color" value={pageBackground} disabled={pageBgTransparent} onChange={(event) => setPageBackground(event.target.value)} />
+                      </label>
+                    </div>
+                    <label className="switch-row" style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center' }}>
+                      透明背景
+                      <input type="checkbox" checked={pageBgTransparent} onChange={(event) => setPageBgTransparent(event.target.checked)} />
+                    </label>
+                    <label>
+                      背景图 URL
+                      <input placeholder="https://example.com/bg.jpg" value={pageBackgroundImage} onChange={(event) => setPageBackgroundImage(event.target.value)} />
+                    </label>
+                    {pageBackgroundImage && (
+                      <>
+                        <label>
+                          背景尺寸
+                          <select value={pageBackgroundSize} onChange={(event) => setPageBackgroundSize(event.target.value)}>
+                            <option value="cover">cover（铺满）</option>
+                            <option value="contain">contain（包含）</option>
+                            <option value="auto">auto（原始大小）</option>
+                            <option value="100% 100%">100% 100%（拉伸）</option>
+                          </select>
+                        </label>
+                        <label>
+                          背景位置
+                          <select value={pageBackgroundPosition} onChange={(event) => setPageBackgroundPosition(event.target.value)}>
+                            <option value="center">居中</option>
+                            <option value="top">顶部</option>
+                            <option value="bottom">底部</option>
+                            <option value="left">左侧</option>
+                            <option value="right">右侧</option>
+                          </select>
+                        </label>
+                        <label>
+                          背景重复
+                          <select value={pageBackgroundRepeat} onChange={(event) => setPageBackgroundRepeat(event.target.value)}>
+                            <option value="no-repeat">不重复</option>
+                            <option value="repeat">平铺</option>
+                            <option value="repeat-x">水平重复</option>
+                            <option value="repeat-y">垂直重复</option>
+                          </select>
+                        </label>
+                      </>
+                    )}
+                  </ConfigSection>
+                </div>
+              )
+            ) : rightTab !== 'source' && selected ? (
               <div className="inspector-content">
                 {rightTab === 'props' && (
                   <ConfigSection title={`${selected.name} / ${selected.type}`}>
@@ -1310,7 +1389,7 @@ function Builder() {
               rightTab !== 'source' && rightTab !== 'flow' && <div className="empty-state">请选择一个画布组件。</div>
             )}
 
-            {rightTab === 'flow' && selected && (
+            {rightTab === 'flow' && selected && selectedId !== '__page__' && (
               <div className="inspector-content">
                 <FlowEditor
                   flow={selected.flow ?? { nodes: [], edges: [] }}
@@ -1319,8 +1398,8 @@ function Builder() {
                 />
               </div>
             )}
-            {rightTab === 'flow' && !selected && (
-              <div className="empty-state">请选择一个画布组件。</div>
+            {rightTab === 'flow' && (!selected || selectedId === '__page__') && (
+              <div className="empty-state">页面组件不支持逻辑编排。</div>
             )}
 
             {rightTab === 'source' && (
@@ -1371,12 +1450,14 @@ function Canvas({
   dsl,
   mode,
   selectedId,
+  isPageSelected,
   dropTargetId,
   onAddWidget,
   onDuplicate,
   onMoveLayer,
   onRemove,
   onSelect,
+  onSelectPage,
   onSetDropTarget,
   onUpdateLayout,
 }: {
@@ -1384,16 +1465,20 @@ function Canvas({
   dsl: PageDsl
   mode: Mode
   selectedId?: string
+  isPageSelected?: boolean
   dropTargetId?: string | null
   onAddWidget?: (template: WidgetTemplate, containerId?: string) => void
   onDuplicate?: () => void
   onMoveLayer?: (direction: 'up' | 'down') => void
   onRemove?: () => void
   onSelect?: (id: string) => void
+  onSelectPage?: () => void
   onSetDropTarget?: (id: string | null) => void
   onUpdateLayout?: (id: string, layout: Partial<Layout>) => void
 }) {
   const [dragging, setDragging] = useState<{ id: string; dx: number; dy: number } | null>(null)
+  const [resizing, setResizing] = useState<{ id: string; handle: string; startX: number; startY: number; startLayout: Layout } | null>(null)
+  const [guides, setGuides] = useState<Array<{ type: 'h' | 'v'; pos: number }>>([])
   const [modal, setModal] = useState<{ title: string; message: string } | null>(null)
   const [toast, setToast] = useState('')
   const [visibleModals, setVisibleModals] = useState<Set<string>>(new Set())
@@ -1475,12 +1560,12 @@ function Canvas({
   return (
     <div className="canvas-scroll">
       <div
-        className={`page-canvas ${device}`}
+        className={`page-canvas ${device} ${isPageSelected ? 'page-selected' : ''}`}
         style={
           {
             width: size.width,
             height: size.height,
-            '--page-bg': dsl.page.background,
+            '--page-bg': dsl.page.backgroundTransparent ? 'transparent' : dsl.page.background,
             '--page-bg-image': dsl.page.backgroundImage ? `url(${dsl.page.backgroundImage})` : 'none',
             '--page-bg-size': dsl.page.backgroundSize,
             '--page-bg-position': dsl.page.backgroundPosition,
@@ -1488,7 +1573,7 @@ function Canvas({
           } as CSSProperties
         }
         onClick={() => {
-          if (mode === 'edit') onSelect?.('')
+          if (mode === 'edit') onSelectPage?.()
         }}
         onDragOver={(event) => mode === 'edit' && event.preventDefault()}
         onDrop={(event) => {
@@ -1499,15 +1584,57 @@ function Canvas({
           onSetDropTarget?.(null)
         }}
         onMouseMove={(event) => {
-          if (!dragging || mode !== 'edit') return
-          const rect = event.currentTarget.getBoundingClientRect()
-          onUpdateLayout?.(dragging.id, {
-            x: Math.round(event.clientX - rect.left - dragging.dx),
-            y: Math.round(event.clientY - rect.top - dragging.dy),
-          })
+          if (mode !== 'edit') return
+          if (dragging) {
+            const rect = event.currentTarget.getBoundingClientRect()
+            let newX = Math.round(event.clientX - rect.left - dragging.dx)
+            let newY = Math.round(event.clientY - rect.top - dragging.dy)
+            const moved = dsl.widgets.find((w) => w.id === dragging.id)
+            if (moved) {
+              const SNAP = 5
+              const otherEdges = { x: [] as number[], y: [] as number[] }
+              for (const w of dsl.widgets) {
+                if (w.id === dragging.id) continue
+                otherEdges.x.push(w.layout.x, w.layout.x + w.layout.width, w.layout.x + w.layout.width / 2)
+                otherEdges.y.push(w.layout.y, w.layout.y + w.layout.height, w.layout.y + w.layout.height / 2)
+              }
+              otherEdges.x.push(size.width / 2)
+              otherEdges.y.push(size.height / 2)
+              const newGuides: Array<{ type: 'h' | 'v'; pos: number }> = []
+              const movingEdgesX = [newX, newX + moved.layout.width, newX + moved.layout.width / 2]
+              const movingEdgesY = [newY, newY + moved.layout.height, newY + moved.layout.height / 2]
+              for (const me of movingEdgesX) {
+                for (const oe of otherEdges.x) {
+                  if (Math.abs(me - oe) <= SNAP) { newX += oe - me; newGuides.push({ type: 'v', pos: oe }); break }
+                }
+              }
+              for (const me of movingEdgesY) {
+                for (const oe of otherEdges.y) {
+                  if (Math.abs(me - oe) <= SNAP) { newY += oe - me; newGuides.push({ type: 'h', pos: oe }); break }
+                }
+              }
+              setGuides(newGuides)
+            }
+            onUpdateLayout?.(dragging.id, { x: newX, y: newY })
+          } else if (resizing) {
+            const rect = event.currentTarget.getBoundingClientRect()
+            const dx = event.clientX - resizing.startX
+            const dy = event.clientY - resizing.startY
+            const start = resizing.startLayout
+            const handle = resizing.handle
+            const newLayout: Partial<Layout> = {}
+
+            if (handle.includes('right')) newLayout.width = Math.max(20, Math.round(start.width + dx))
+            if (handle.includes('left')) { newLayout.width = Math.max(20, Math.round(start.width - dx)); newLayout.x = Math.round(start.x + dx) }
+            if (handle.includes('bottom')) newLayout.height = Math.max(20, Math.round(start.height + dy))
+            if (handle.includes('top') && handle !== 'top-left' && handle !== 'top-right') { newLayout.height = Math.max(20, Math.round(start.height - dy)); newLayout.y = Math.round(start.y + dy) }
+            if (handle === 'top-left' || handle === 'top-right') { newLayout.height = Math.max(20, Math.round(start.height - dy)); newLayout.y = Math.round(start.y + dy) }
+
+            onUpdateLayout?.(resizing.id, newLayout)
+          }
         }}
-        onMouseUp={() => setDragging(null)}
-        onMouseLeave={() => setDragging(null)}
+        onMouseUp={() => { setDragging(null); setResizing(null); setGuides([]) }}
+        onMouseLeave={() => { setDragging(null); setResizing(null); setGuides([]) }}
       >
         {dsl.widgets
           .slice()
@@ -1573,49 +1700,23 @@ function Canvas({
               }}
             >
               {mode === 'edit' && selectedId === widget.id && (
-                <div className="widget-toolbar">
-                  <span className="toolbar-move">移动</span>
-                  <button
-                    className="toolbar-btn"
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      onDuplicate?.()
-                    }}
-                  >
-                    复制
-                  </button>
-                  <button
-                    className="toolbar-btn"
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      onMoveLayer?.('up')
-                    }}
-                  >
-                    上移
-                  </button>
-                  <button
-                    className="toolbar-btn"
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      onMoveLayer?.('down')
-                    }}
-                  >
-                    下移
-                  </button>
-                  <button
-                    className="toolbar-btn toolbar-delete"
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      onRemove?.()
-                    }}
-                  >
-                    删除
-                  </button>
-                </div>
+                <>
+                  <div className="widget-toolbar">
+                    <span className="toolbar-move">移动</span>
+                    <button className="toolbar-btn" type="button" onClick={(event) => { event.stopPropagation(); onDuplicate?.() }}>复制</button>
+                    <button className="toolbar-btn" type="button" onClick={(event) => { event.stopPropagation(); onMoveLayer?.('up') }}>上移</button>
+                    <button className="toolbar-btn" type="button" onClick={(event) => { event.stopPropagation(); onMoveLayer?.('down') }}>下移</button>
+                    <button className="toolbar-btn toolbar-delete" type="button" onClick={(event) => { event.stopPropagation(); onRemove?.() }}>删除</button>
+                  </div>
+                  <div className="resize-handle top-left" onMouseDown={(event) => { event.stopPropagation(); setResizing({ id: widget.id, handle: 'top-left', startX: event.clientX, startY: event.clientY, startLayout: { ...widget.layout } }) }} />
+                  <div className="resize-handle top-right" onMouseDown={(event) => { event.stopPropagation(); setResizing({ id: widget.id, handle: 'top-right', startX: event.clientX, startY: event.clientY, startLayout: { ...widget.layout } }) }} />
+                  <div className="resize-handle bottom-left" onMouseDown={(event) => { event.stopPropagation(); setResizing({ id: widget.id, handle: 'bottom-left', startX: event.clientX, startY: event.clientY, startLayout: { ...widget.layout } }) }} />
+                  <div className="resize-handle bottom-right" onMouseDown={(event) => { event.stopPropagation(); setResizing({ id: widget.id, handle: 'bottom-right', startX: event.clientX, startY: event.clientY, startLayout: { ...widget.layout } }) }} />
+                  <div className="resize-handle top" onMouseDown={(event) => { event.stopPropagation(); setResizing({ id: widget.id, handle: 'top', startX: event.clientX, startY: event.clientY, startLayout: { ...widget.layout } }) }} />
+                  <div className="resize-handle bottom" onMouseDown={(event) => { event.stopPropagation(); setResizing({ id: widget.id, handle: 'bottom', startX: event.clientX, startY: event.clientY, startLayout: { ...widget.layout } }) }} />
+                  <div className="resize-handle left" onMouseDown={(event) => { event.stopPropagation(); setResizing({ id: widget.id, handle: 'left', startX: event.clientX, startY: event.clientY, startLayout: { ...widget.layout } }) }} />
+                  <div className="resize-handle right" onMouseDown={(event) => { event.stopPropagation(); setResizing({ id: widget.id, handle: 'right', startX: event.clientX, startY: event.clientY, startLayout: { ...widget.layout } }) }} />
+                </>
               )}
               <WidgetRenderer
                 mode={mode}
@@ -1631,6 +1732,19 @@ function Canvas({
               />
             </div>
           )})}
+        {mode === 'edit' && guides.map((g, i) => (
+          <div key={`guide-${i}`} className={`guide-line ${g.type === 'v' ? 'guide-v' : 'guide-h'}`} style={g.type === 'v' ? { left: g.pos } : { top: g.pos }} />
+        ))}
+        {mode === 'edit' && (dragging || resizing) && (() => {
+          const targetId = dragging?.id ?? resizing?.id
+          const target = dsl.widgets.find((w) => w.id === targetId)
+          if (!target) return null
+          return (
+            <div className="layout-tooltip" style={{ left: target.layout.x, top: target.layout.y + target.layout.height + 6 }}>
+              X:{target.layout.x}  Y:{target.layout.y}  W:{target.layout.width}  H:{target.layout.height}
+            </div>
+          )
+        })()}
         {toast && <div className="runtime-toast">{toast}</div>}
         {modal && (
           <div className="runtime-modal" role="dialog" aria-modal="true">
