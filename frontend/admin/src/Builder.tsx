@@ -61,6 +61,22 @@ type WidgetSchema = {
     padding: number
     margin: number
     flexDirection: string
+    // 布局属性
+    overflow?: string
+    minWidth?: string
+    maxWidth?: string
+    minHeight?: string
+    maxHeight?: string
+    borderWidth?: number
+    borderStyle?: string
+    borderColor?: string
+    boxShadow?: string
+    // 文本属性
+    fontWeight?: number
+    lineHeight?: number
+    textAlign?: string
+    // 图片属性
+    objectFit?: string
     // modal 专属样式
     backdropColor?: string
     headerBg?: string
@@ -585,6 +601,19 @@ function normalizeWidget(widget: WidgetSchema, index: number): WidgetSchema {
       padding: Number(style.padding ?? 0),
       margin: Number(style.margin ?? 0),
       flexDirection: style.flexDirection ?? 'row',
+      overflow: style.overflow ?? 'hidden',
+      minWidth: style.minWidth ?? '',
+      maxWidth: style.maxWidth ?? '',
+      minHeight: style.minHeight ?? '',
+      maxHeight: style.maxHeight ?? '',
+      borderWidth: Number(style.borderWidth ?? 0),
+      borderStyle: style.borderStyle ?? 'solid',
+      borderColor: style.borderColor ?? '#000000',
+      boxShadow: style.boxShadow ?? '',
+      fontWeight: Number(style.fontWeight ?? 400),
+      lineHeight: Number(style.lineHeight ?? 1.5),
+      textAlign: style.textAlign ?? 'left',
+      objectFit: style.objectFit ?? 'cover',
     },
     api: { ...template.defaults.api, ...(widget.api ?? {}) },
     animation: { ...template.defaults.animation, ...(widget.animation ?? {}) },
@@ -1300,6 +1329,151 @@ function Builder() {
                         <option value="column-reverse">垂直反向</option>
                       </select>
                     </label>
+                    <h3 className="config-subtitle">布局属性</h3>
+                    <label>
+                      溢出
+                      <select
+                        value={selected.style.overflow ?? 'hidden'}
+                        onChange={(event) => updateStyle('overflow', event.target.value)}
+                      >
+                        <option value="hidden">隐藏（hidden）</option>
+                        <option value="visible">可见（visible）</option>
+                        <option value="scroll">滚动（scroll）</option>
+                        <option value="auto">自动（auto）</option>
+                      </select>
+                    </label>
+                    <div className="field-grid">
+                      <label>
+                        最小宽度
+                        <input
+                          placeholder="auto / 100px"
+                          value={selected.style.minWidth ?? ''}
+                          onChange={(event) => updateStyle('minWidth', event.target.value)}
+                        />
+                      </label>
+                      <label>
+                        最大宽度
+                        <input
+                          placeholder="none / 300px"
+                          value={selected.style.maxWidth ?? ''}
+                          onChange={(event) => updateStyle('maxWidth', event.target.value)}
+                        />
+                      </label>
+                      <label>
+                        最小高度
+                        <input
+                          placeholder="auto / 100px"
+                          value={selected.style.minHeight ?? ''}
+                          onChange={(event) => updateStyle('minHeight', event.target.value)}
+                        />
+                      </label>
+                      <label>
+                        最大高度
+                        <input
+                          placeholder="none / 300px"
+                          value={selected.style.maxHeight ?? ''}
+                          onChange={(event) => updateStyle('maxHeight', event.target.value)}
+                        />
+                      </label>
+                    </div>
+                    <h3 className="config-subtitle">边框</h3>
+                    <div className="field-grid">
+                      <label>
+                        边框宽度
+                        <input
+                          type="number"
+                          min="0"
+                          value={selected.style.borderWidth ?? 0}
+                          onChange={(event) => updateStyle('borderWidth', Number(event.target.value))}
+                        />
+                      </label>
+                      <label>
+                        边框样式
+                        <select
+                          value={selected.style.borderStyle ?? 'solid'}
+                          onChange={(event) => updateStyle('borderStyle', event.target.value)}
+                        >
+                          <option value="solid">实线</option>
+                          <option value="dashed">虚线</option>
+                          <option value="dotted">点线</option>
+                          <option value="double">双线</option>
+                          <option value="none">无</option>
+                        </select>
+                      </label>
+                    </div>
+                    <label>
+                      边框颜色
+                      <input
+                        type="color"
+                        value={selected.style.borderColor ?? '#000000'}
+                        onChange={(event) => updateStyle('borderColor', event.target.value)}
+                      />
+                    </label>
+                    <label>
+                      阴影
+                      <input
+                        placeholder="0 2px 8px rgba(0,0,0,0.15)"
+                        value={selected.style.boxShadow ?? ''}
+                        onChange={(event) => updateStyle('boxShadow', event.target.value)}
+                      />
+                    </label>
+                    <h3 className="config-subtitle">文本</h3>
+                    <div className="field-grid">
+                      <label>
+                        字重
+                        <select
+                          value={selected.style.fontWeight ?? 400}
+                          onChange={(event) => updateStyle('fontWeight', Number(event.target.value))}
+                        >
+                          <option value={300}>细体（300）</option>
+                          <option value={400}>常规（400）</option>
+                          <option value={500}>中等（500）</option>
+                          <option value={600}>半粗（600）</option>
+                          <option value={700}>粗体（700）</option>
+                          <option value={800}>特粗（800）</option>
+                        </select>
+                      </label>
+                      <label>
+                        对齐
+                        <select
+                          value={selected.style.textAlign ?? 'left'}
+                          onChange={(event) => updateStyle('textAlign', event.target.value)}
+                        >
+                          <option value="left">左对齐</option>
+                          <option value="center">居中</option>
+                          <option value="right">右对齐</option>
+                          <option value="justify">两端对齐</option>
+                        </select>
+                      </label>
+                    </div>
+                    <label>
+                      行高 {selected.style.lineHeight ?? 1.5}
+                      <input
+                        type="range"
+                        min="1"
+                        max="3"
+                        step="0.1"
+                        value={selected.style.lineHeight ?? 1.5}
+                        onChange={(event) => updateStyle('lineHeight', Number(event.target.value))}
+                      />
+                    </label>
+                    {selected.type === 'image' && (
+                      <>
+                        <h3 className="config-subtitle">图片</h3>
+                        <label>
+                          填充方式
+                          <select
+                            value={selected.style.objectFit ?? 'cover'}
+                            onChange={(event) => updateStyle('objectFit', event.target.value)}
+                          >
+                            <option value="cover">裁剪填充（cover）</option>
+                            <option value="contain">完整包含（contain）</option>
+                            <option value="fill">拉伸填充（fill）</option>
+                            <option value="none">原始大小（none）</option>
+                          </select>
+                        </label>
+                      </>
+                    )}
                     {isChildOfContainer && (
                       <>
                         <h3 className="config-subtitle">容器子项布局</h3>
@@ -2076,6 +2250,17 @@ function WidgetRenderer({
     '--widget-padding': `${widget.style.padding}px`,
     '--widget-margin': `${widget.style.margin}px`,
     '--widget-flex-dir': widget.style.flexDirection,
+    '--widget-overflow': widget.style.overflow ?? 'hidden',
+    '--widget-min-w': widget.style.minWidth || 'unset',
+    '--widget-max-w': widget.style.maxWidth || 'unset',
+    '--widget-min-h': widget.style.minHeight || 'unset',
+    '--widget-max-h': widget.style.maxHeight || 'unset',
+    '--widget-border': widget.style.borderWidth ? `${widget.style.borderWidth}px ${widget.style.borderStyle ?? 'solid'} ${widget.style.borderColor ?? '#000'}` : 'none',
+    '--widget-shadow': widget.style.boxShadow || 'none',
+    '--widget-font-weight': widget.style.fontWeight ?? 400,
+    '--widget-line-height': widget.style.lineHeight ?? 1.5,
+    '--widget-text-align': widget.style.textAlign ?? 'left',
+    '--widget-object-fit': widget.style.objectFit ?? 'cover',
     '--container-dir': widget.props.direction ?? 'column',
     '--container-justify': widget.props.justify ?? 'flex-start',
     '--container-align': widget.props.align ?? 'stretch',

@@ -15,6 +15,9 @@ type WidgetSchema = {
     backgroundPosition: string; backgroundRepeat: string; color: string
     fontSize: number; radius: number; opacity: number
     padding: number; margin: number; flexDirection: string
+    overflow?: string; minWidth?: string; maxWidth?: string; minHeight?: string; maxHeight?: string
+    borderWidth?: number; borderStyle?: string; borderColor?: string; boxShadow?: string
+    fontWeight?: number; lineHeight?: number; textAlign?: string; objectFit?: string
   }
   events: Partial<Record<EventTrigger, Array<{ type: string; label: string; title: string; message: string; method: string; url: string; body: string; targetWidgetId: string }>>>
   children?: WidgetSchema[]
@@ -135,6 +138,17 @@ function RenderWidget({ widget, onRun, onClose }: { widget: WidgetSchema; onRun:
     '--widget-radius': `${widget.style.radius}px`, '--widget-font': `${widget.style.fontSize}px`,
     '--widget-opacity': widget.style.opacity / 100, '--widget-padding': `${widget.style.padding}px`,
     '--widget-margin': `${widget.style.margin}px`, '--widget-flex-dir': widget.style.flexDirection,
+    '--widget-overflow': widget.style.overflow ?? 'hidden',
+    '--widget-min-w': widget.style.minWidth || 'unset',
+    '--widget-max-w': widget.style.maxWidth || 'unset',
+    '--widget-min-h': widget.style.minHeight || 'unset',
+    '--widget-max-h': widget.style.maxHeight || 'unset',
+    '--widget-border': widget.style.borderWidth ? `${widget.style.borderWidth}px ${widget.style.borderStyle ?? 'solid'} ${widget.style.borderColor ?? '#000'}` : 'none',
+    '--widget-shadow': widget.style.boxShadow || 'none',
+    '--widget-font-weight': widget.style.fontWeight ?? 400,
+    '--widget-line-height': widget.style.lineHeight ?? 1.5,
+    '--widget-text-align': widget.style.textAlign ?? 'left',
+    '--widget-object-fit': widget.style.objectFit ?? 'cover',
     '--container-dir': widget.props.direction ?? 'column', '--container-justify': widget.props.justify ?? 'flex-start',
     '--container-align': widget.props.align ?? 'stretch', '--container-gap': `${widget.props.gap ?? 10}px`,
     '--container-wrap': widget.props.wrap ?? 'nowrap',
