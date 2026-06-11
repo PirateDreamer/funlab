@@ -114,7 +114,7 @@ export default function Preview() {
           return (
             <div key={widget.id} className={isModal ? 'preview-modal-overlay' : 'preview-widget'}
               style={isModal ? {} : { position: 'absolute', left: widget.layout.x, top: widget.layout.y, width: widget.layout.width, height: widget.layout.height, zIndex: widget.layout.zIndex }}>
-              {isModal && <div className="modal-backdrop" onClick={() => hideModal(widget.id)} />}
+              {isModal && <div className="modal-backdrop" style={{ background: widget.style.backdropColor }} onClick={() => hideModal(widget.id)} />}
               <RenderWidget widget={widget} onRun={runActions} onClose={() => hideModal(widget.id)} />
             </div>
           )
@@ -141,16 +141,41 @@ function RenderWidget({ widget, onRun, onClose }: { widget: WidgetSchema; onRun:
   } as CSSProperties
   const h = { onClick: () => void onRun(widget, 'click'), onDoubleClick: () => void onRun(widget, 'doubleClick'), onMouseEnter: () => void onRun(widget, 'mouseEnter'), onMouseLeave: () => void onRun(widget, 'mouseLeave') }
 
-  if (widget.type === 'modal') return (
-    <div className="widget-content widget-modal modal-centered" style={s}>
-      <div className="modal-head"><strong>{widget.props.title}</strong>{widget.props.showClose !== 'false' && <button className="modal-close" type="button" onClick={onClose}>&times;</button>}</div>
-      <div className="modal-body">{widget.props.content}</div>
-      <div className="modal-foot"><button className="modal-confirm" type="button" onClick={onClose}>{widget.props.confirmText}</button></div>
-    </div>
-  )
+  if (widget.type === 'modal') {
+    const ms = {
+      ...s,
+      '--modal-shadow': widget.style.modalShadow,
+      '--modal-border-color': widget.style.modalBorderColor,
+      '--modal-header-bg': widget.style.headerBg,
+      '--modal-header-border': widget.style.headerBorderColor,
+      '--modal-header-color': widget.style.headerColor,
+      '--modal-close-color': widget.style.closeColor,
+      '--modal-body-color': widget.style.bodyColor,
+      '--modal-confirm-bg': widget.style.confirmBg,
+      '--modal-confirm-color': widget.style.confirmColor,
+      '--modal-confirm-radius': `${widget.style.confirmRadius ?? 6}px`,
+    } as CSSProperties
+    return (
+      <div className="widget-content widget-modal modal-centered" style={ms}>
+        <div className="modal-head"><strong>{widget.props.title}</strong>{widget.props.showClose !== 'false' && <button className="modal-close" type="button" onClick={onClose}>&times;</button>}</div>
+        <div className="modal-body">{widget.props.content}</div>
+        <div className="modal-foot"><button className="modal-confirm" type="button" onClick={onClose}>{widget.props.confirmText}</button></div>
+      </div>
+    )
+  }
   if (widget.type === 'container') return (
     <div className="widget-content widget-container" style={s} {...h}>
-      {widget.children?.map((c) => <div key={c.id} className="container-child"><RenderWidget widget={c} onRun={onRun} onClose={onClose} /></div>)}
+      {widget.children?.map((c) => (
+        <div key={c.id} className="container-child" style={{
+          flexGrow: Number(c.props.flexGrow ?? 0),
+          flexShrink: Number(c.props.flexShrink ?? 1),
+          flexBasis: c.props.flexBasis || 'auto',
+          alignSelf: c.props.alignSelf || 'auto',
+          width: c.props.childWidth || 'auto',
+        }}>
+          <RenderWidget widget={c} onRun={onRun} onClose={onClose} />
+        </div>
+      ))}
     </div>
   )
   if (widget.type === 'text') return <div className="widget-content widget-text" style={s} {...h}>{widget.props.text}</div>
