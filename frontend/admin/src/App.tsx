@@ -1,1 +1,9 @@
-// Unused — router entry is in router.tsx, rendered via main.tsx
+
+function App() {
+  return (
+    <>
+    </>
+  )
+}
+
+export default App
