@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Input, Tabs, Button, Space, Typography, Modal, message } from 'antd'
-import { PlusOutlined, DeleteOutlined, SaveOutlined } from '@ant-design/icons'
+import { Input, Tabs, Button, Space, Typography, Modal, Tag, message } from 'antd'
+import { PlusOutlined, DeleteOutlined, SaveOutlined, EditOutlined } from '@ant-design/icons'
 import type { ComponentNode, EventHandler, ComponentProps } from '../../../core/protocol'
+import EventEditModal from './EventEditModal'
 import styles from '../style.module.css'
 
 const { Text } = Typography
@@ -124,65 +125,108 @@ function PropsTab({ node, onUpdate }: { node: ComponentNode; onUpdate: PropertyP
 /** 事件编辑 */
 function EventsTab({ node, onUpdate }: { node: ComponentNode; onUpdate: PropertyPanelProps['onUpdate'] }) {
   const events = node.events || []
+  const [modalOpen, setModalOpen] = useState(false)
+  const [editIndex, setEditIndex] = useState<number | null>(null)
 
   const handleUpdate = (newEvents: EventHandler[]) => {
     onUpdate(node.id, { events: newEvents.length > 0 ? newEvents : undefined })
   }
 
+  const handleAdd = () => {
+    setEditIndex(null)
+    setModalOpen(true)
+  }
+
+  const handleEdit = (index: number) => {
+    setEditIndex(index)
+    setModalOpen(true)
+  }
+
+  const handleSave = (ev: EventHandler) => {
+    const newEvents = [...events]
+    if (editIndex !== null) {
+      newEvents[editIndex] = ev
+    } else {
+      newEvents.push(ev)
+    }
+    handleUpdate(newEvents)
+  }
+
+  const handleDelete = (index: number) => {
+    handleUpdate(events.filter((_, i) => i !== index))
+  }
+
+  // 取 handler 预览文本
+  const getHandlerPreview = (handler: EventHandler['handler']): string => {
+    const code = typeof handler === 'object' ? handler.value : ''
+    const firstLine = code.split('\n').find((l) => l.trim() && !l.trim().startsWith('//')) || ''
+    return firstLine.trim().slice(0, 40) + (firstLine.length > 40 ? '...' : '')
+  }
+
   return (
     <div style={{ padding: '12px 0' }}>
       {events.map((ev, i) => (
-        <div key={i} style={{ marginBottom: 12, padding: 8, background: '#fafafa', borderRadius: 4 }}>
-          <Space style={{ display: 'flex', marginBottom: 4 }}>
-            <Input
-              size="small"
-              value={ev.event}
-              placeholder="事件名 (如 click)"
-              style={{ width: 100 }}
-              onChange={(e) => {
-                const newEvents = [...events]
-                newEvents[i] = { ...ev, event: e.target.value }
-                handleUpdate(newEvents)
-              }}
-            />
-            <Button
-              size="small"
-              type="text"
-              danger
-              icon={<DeleteOutlined />}
-              onClick={() => {
-                const newEvents = events.filter((_, idx) => idx !== i)
-                handleUpdate(newEvents)
-              }}
-            />
-          </Space>
-          <Input.TextArea
-            size="small"
-            rows={2}
-            value={typeof ev.handler === 'object' ? ev.handler.value : ''}
-            placeholder="处理函数: (e) => { ... }"
-            onChange={(e) => {
-              const newEvents = [...events]
-              newEvents[i] = { ...ev, handler: { type: 'JSFunction', value: e.target.value } }
-              handleUpdate(newEvents)
-            }}
-          />
+        <div
+          key={i}
+          style={{
+            marginBottom: 8,
+            padding: '8px 10px',
+            background: '#fafafa',
+            borderRadius: 6,
+            border: '1px solid #f0f0f0',
+            cursor: 'pointer',
+            transition: 'border-color 0.15s',
+          }}
+          onClick={() => handleEdit(i)}
+          onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#91caff')}
+          onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#f0f0f0')}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+            <Space size={4}>
+              <Tag color="blue" style={{ margin: 0, fontSize: 11 }}>{ev.event || '未命名'}</Tag>
+              {ev.preventDefault && <Tag style={{ margin: 0, fontSize: 10 }}>preventDefault</Tag>}
+              {ev.stopPropagation && <Tag style={{ margin: 0, fontSize: 10 }}>stopPropagation</Tag>}
+            </Space>
+            <Space size={0}>
+              <Button
+                size="small"
+                type="text"
+                icon={<EditOutlined />}
+                style={{ color: '#1677ff', padding: 0, minWidth: 20 }}
+                onClick={(e) => { e.stopPropagation(); handleEdit(i) }}
+              />
+              <Button
+                size="small"
+                type="text"
+                danger
+                icon={<DeleteOutlined />}
+                style={{ padding: 0, minWidth: 20 }}
+                onClick={(e) => { e.stopPropagation(); handleDelete(i) }}
+              />
+            </Space>
+          </div>
+          <div style={{ fontSize: 11, color: '#999', fontFamily: 'ui-monospace, Consolas, monospace' }}>
+            {getHandlerPreview(ev.handler)}
+          </div>
         </div>
       ))}
+
       <Button
         size="small"
         type="dashed"
         block
         icon={<PlusOutlined />}
-        onClick={() =>
-          handleUpdate([
-            ...events,
-            { event: '', handler: { type: 'JSFunction', value: '' } },
-          ])
-        }
+        onClick={handleAdd}
       >
         添加事件
       </Button>
+
+      <EventEditModal
+        open={modalOpen}
+        event={editIndex !== null ? events[editIndex] : null}
+        onClose={() => setModalOpen(false)}
+        onSave={handleSave}
+      />
     </div>
   )
 }
