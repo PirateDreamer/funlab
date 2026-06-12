@@ -141,6 +141,7 @@ export default function Editor() {
           id: genId(),
           componentName: item.name,
           props: item.defaultProps ? (item.defaultProps as Record<string, import('../../core/protocol').BindValue>) : undefined,
+          meta: item.package ? { package: item.package } : undefined,
           children: item.defaultChildren
             ? typeof item.defaultChildren === 'string'
               ? [item.defaultChildren]
@@ -231,7 +232,7 @@ export default function Editor() {
             )}
 
             {state.mode === 'preview' && (
-              <PreviewPanel schema={state.pageSchema} />
+              <PreviewPanel schema={state.pageSchema} device={device} />
             )}
           </div>
 

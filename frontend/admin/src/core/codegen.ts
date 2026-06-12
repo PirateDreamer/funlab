@@ -196,6 +196,8 @@ function normalizeStyleValue(key: string, value: string | number): string | numb
   if (key === 'backgroundImage' && value && !value.startsWith('url(')) {
     return `url("${value}")`
   }
+  // 100vw 溢出风险，转为 100%
+  if (value === '100vw') return '100%'
   return value
 }
 

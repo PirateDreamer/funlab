@@ -72,6 +72,8 @@ export interface PaletteItem {
   category: string
   defaultProps?: Record<string, unknown>
   defaultChildren?: string | ComponentNode[]
+  /** 组件来源包 */
+  package?: string
 }
 
 /** 拖拽数据 */

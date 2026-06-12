@@ -49,12 +49,25 @@ function bindValueToJS(value: BindValue): string {
 // ============ 节点 → createElement ============
 
 function nodeToCreateElement(node: ComponentNode): string {
-  const tag = `'${node.componentName}'`
+  // antd-mobile 组件用变量引用，HTML 标签用字符串
+  const isMobile = node.meta?.package === 'antd-mobile'
+  const tag = isMobile ? `antdMobile.${node.componentName}` : `'${node.componentName}'`
 
-  // props
+  // props（text 不作为 prop，转为 children）
   const propEntries: string[] = []
+  let textChild: string | null = null
   if (node.props) {
     for (const [k, v] of Object.entries(node.props)) {
+      if (k === 'text') {
+        textChild = bindValueToJS(v)
+      } else {
+        propEntries.push(`${k}: ${bindValueToJS(v)}`)
+      }
+    }
+  }
+  // host 属性（id, ref 等 DOM 属性）
+  if (node.host) {
+    for (const [k, v] of Object.entries(node.host)) {
       propEntries.push(`${k}: ${bindValueToJS(v)}`)
     }
   }
@@ -65,6 +78,7 @@ function nodeToCreateElement(node: ComponentNode): string {
       if (camelKey === 'backgroundImage' && typeof val === 'string' && val && !val.startsWith('url(')) {
         val = `url("${val}")`
       }
+      if (val === '100vw') val = '100%'
       return `${camelKey}: ${stringifyValue(val)}`
     })
     propEntries.push(`style: { ${styleEntries.join(', ')} }`)
@@ -73,11 +87,12 @@ function nodeToCreateElement(node: ComponentNode): string {
     propEntries.push(`className: '${escapeStr(node.className)}'`)
   }
 
-  // events
+  // events（click → onClick）
   if (node.events) {
     for (const ev of node.events) {
       const handler = isJSFunction(ev.handler) ? ev.handler.value : ev.handler.value
-      propEntries.push(`${ev.event}: ${handler}`)
+      const reactEvent = ev.event.startsWith('on') ? ev.event : 'on' + ev.event.charAt(0).toUpperCase() + ev.event.slice(1)
+      propEntries.push(`${reactEvent}: ${handler}`)
     }
   }
 
@@ -88,8 +103,11 @@ function nodeToCreateElement(node: ComponentNode): string {
 
   const propsStr = propEntries.length > 0 ? `{ ${propEntries.join(', ')} }` : 'null'
 
-  // children
+  // children（text prop 转为第一个 child）
   const childExprs: string[] = []
+  if (textChild) {
+    childExprs.push(textChild)
+  }
   if (node.children) {
     for (const child of node.children) {
       if (typeof child === 'string') {

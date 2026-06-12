@@ -122,15 +122,19 @@
   overflow: auto;
   background: #f0f2f5;
   position: relative;
+  display: flex;
 }
 
 .canvasInner {
+  flex: 1;
   min-height: 100%;
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   padding: 16px;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .canvasDropHint {
@@ -235,6 +239,8 @@
 /* 预览面板 */
 .previewWrapper {
   flex: 1;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   background: #fff;
 }
