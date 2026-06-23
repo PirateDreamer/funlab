@@ -13,11 +13,14 @@ import {
   TabletOutlined,
   MobileOutlined,
   DownOutlined,
+  CloudUploadOutlined,
+  DownloadOutlined,
 } from '@ant-design/icons'
 import type { EditorMode, DeviceType, DevicePreset } from '../types'
 import { DEVICE_PRESETS } from '../types'
 import type { PageSchema } from '../../../core/protocol'
 import { generatePageCode } from '../../../core/codegen'
+import { buildPreviewHtml } from '../../../core/previewHtml'
 import styles from '../style.module.css'
 
 interface ToolbarProps {
@@ -31,6 +34,7 @@ interface ToolbarProps {
   device: DevicePreset
   onDeviceChange: (device: DevicePreset) => void
   onImport?: () => void
+  onPublish?: () => void
 }
 
 /** 下载文件 */
@@ -72,6 +76,7 @@ export default function Toolbar({
   device,
   onDeviceChange,
   onImport,
+  onPublish,
 }: ToolbarProps) {
   const handleExport = () => {
     try {
@@ -87,6 +92,16 @@ export default function Toolbar({
     const json = JSON.stringify(schema, null, 2)
     downloadFile(`${schema.meta.name || 'page'}.json`, json)
     message.success('JSON 已导出')
+  }
+
+  const handleDownloadHtml = () => {
+    try {
+      const html = buildPreviewHtml(schema)
+      downloadFile(`${schema.meta.name || 'page'}.html`, html)
+      message.success('HTML 已下载')
+    } catch (err) {
+      message.error('下载失败: ' + String(err))
+    }
   }
 
   // 按设备类型分组的下拉菜单
@@ -177,11 +192,21 @@ export default function Toolbar({
           <Tooltip title="导出 JSON">
             <Button size="small" icon={<CodeOutlined />} onClick={handleExportJson} />
           </Tooltip>
+          <Tooltip title="下载 HTML 文件">
+            <Button size="small" icon={<DownloadOutlined />} onClick={handleDownloadHtml} />
+          </Tooltip>
           <Tooltip title="导出 React 代码">
-            <Button size="small" type="primary" icon={<ExportOutlined />} onClick={handleExport}>
+            <Button size="small" icon={<ExportOutlined />} onClick={handleExport}>
               导出代码
             </Button>
           </Tooltip>
+          {onPublish && (
+            <Tooltip title="发布为独立网页">
+              <Button size="small" type="primary" icon={<CloudUploadOutlined />} onClick={onPublish}>
+                发布网页
+              </Button>
+            </Tooltip>
+          )}
         </Space>
       </div>
     </div>

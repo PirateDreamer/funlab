@@ -2,7 +2,7 @@ import { useCallback, useEffect } from 'react'
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core'
 import { useState } from 'react'
-import { ConfigProvider, theme } from 'antd'
+import { ConfigProvider, theme, message } from 'antd'
 import zhCN from 'antd/locale/zh_CN'
 
 import { useEditorState } from './hooks/useEditorState'
@@ -19,6 +19,7 @@ import ImportModal from './components/ImportModal'
 import type { PaletteItem, DevicePreset } from './types'
 import { DEVICE_PRESETS } from './types'
 import type { ComponentNode } from '../../core/protocol'
+import { buildPreviewHtml } from '../../core/previewHtml'
 import styles from './style.module.css'
 
 /** 生成唯一 ID */
@@ -163,6 +164,38 @@ export default function Editor() {
     setRightWidth((w) => Math.min(500, Math.max(200, w + delta)))
   }, [])
 
+  // 发布网页
+  const handlePublish = useCallback(async () => {
+    try {
+      const html = buildPreviewHtml(state.pageSchema)
+      const resp = await fetch('/api/page/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: state.pageSchema.meta.name || 'untitled',
+          schemaJson: JSON.stringify(state.pageSchema),
+          html,
+        }),
+      })
+      const data = await resp.json()
+      if (data.code !== '0') {
+        message.error(data.msg || '发布失败')
+        return
+      }
+      const url = data.data.url
+      message.success('发布成功！')
+      // 复制链接到剪贴板
+      try {
+        await navigator.clipboard.writeText(url)
+        message.info('链接已复制到剪贴板')
+      } catch {
+        // clipboard API 可能不可用
+      }
+    } catch (err) {
+      message.error('发布失败: ' + String(err))
+    }
+  }, [state.pageSchema])
+
   // 获取选中节点
   const selectedNode = state.selectedId
     ? findNodeInTree(state.pageSchema.componentTree, state.selectedId)
@@ -183,6 +216,7 @@ export default function Editor() {
             device={device}
             onDeviceChange={setDevice}
             onImport={() => setImportOpen(true)}
+            onPublish={handlePublish}
           />
 
           <div className={styles.body}>

@@ -31,6 +31,13 @@ func NewServer(cfg *config.Config, handlers []Handler) *Server {
 
 	registerRoutes(api, handlers...)
 
+	// 注册公开路由（不经过 /api 中间件）
+	lo.ForEach(handlers, func(item Handler, _ int) {
+		if pr, ok := item.(PublicRouter); ok {
+			pr.RegisterPublicRoutes(r)
+		}
+	})
+
 	return &Server{engine: r, cfg: cfg}
 }
 
@@ -40,11 +47,15 @@ func (s *Server) Run() error {
 }
 
 func registerRoutes(api *gin.RouterGroup, handlers ...Handler) {
-	lo.ForEach(handlers, func(item Handler, index int) {
-		registerRoutes(api, item)
+	lo.ForEach(handlers, func(item Handler, _ int) {
+		item.RegisterRouter(api)
 	})
 }
 
 type Handler interface {
 	RegisterRouter(r *gin.RouterGroup)
+}
+
+type PublicRouter interface {
+	RegisterPublicRoutes(r *gin.Engine)
 }

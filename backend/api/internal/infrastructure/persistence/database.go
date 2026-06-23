@@ -28,7 +28,7 @@ func NewDatabase(cfg *config.Config) (*gorm.DB, func(), error) {
 	sqlDB.SetMaxOpenConns(dcfg.MaxOpenConns)
 	sqlDB.SetConnMaxLifetime(time.Duration(dcfg.ConnMaxLifetime) * time.Second)
 
-	if err := db.AutoMigrate(&gormUser{}); err != nil {
+	if err := db.AutoMigrate(&gormUser{}, &gormPage{}); err != nil {
 		return nil, nil, err
 	}
 
