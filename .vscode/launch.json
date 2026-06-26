@@ -10,6 +10,15 @@
             "args": ["-config", "${workspaceFolder}/backend/api/config/config.yaml"],
             "cwd": "${workspaceFolder}",
             "showLog": true
+        },
+        {
+            "name": "McpGateway",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/mcp-gateway/backend",
+            "cwd": "${workspaceFolder}",
+            "showLog": true
         }
     ]
 }
