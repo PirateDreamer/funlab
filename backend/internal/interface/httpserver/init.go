@@ -27,8 +27,6 @@ func NewServer(cfg *config.Config, handlers []Handler) *Server {
 		middleware.CORS(cfg),
 	)
 
-	handlers = append(handlers, NewUserHandler())
-
 	registerRoutes(api, handlers...)
 
 	// 注册公开路由（不经过 /api 中间件）

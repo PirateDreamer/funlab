@@ -11,6 +11,18 @@ import (
 	"funlab-api/internal/config"
 )
 
+// 配置文件加载
+
+// 日志
+
+// service： http、grpc、mq消费者
+
+// 数据库 ：mysql、redis、elasticsearch、本地缓存
+
+// client：http、grpc、mq生产者
+
+// 领域驱动设计
+
 // 配置文件路径
 var configPath = flag.String("config", "config/config.yaml", "config file path")
 

@@ -12,10 +12,10 @@ import (
 )
 
 type PageHandler struct {
-	svc *pageapp.PageService
+	svc pageapp.PageService
 }
 
-func NewPageHandler(svc *pageapp.PageService) *PageHandler {
+func NewPageHandler(svc pageapp.PageService) *PageHandler {
 	return &PageHandler{svc: svc}
 }
 
